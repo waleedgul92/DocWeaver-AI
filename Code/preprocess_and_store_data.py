@@ -5,45 +5,31 @@ import re
 import os
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import WebBaseLoader
 import langchain.vectorstores as vectorstore
 import chromadb
+import bs4
 
-def scrap_url_data(url):
+def scrap_url_data(url,model):
 
     # Read the page source
-    source = urlopen(url).read()
+    loader=WebBaseLoader( web_paths=url,
+                         bs_kwargs=dict(parse_only=bs4.SoupStrainer(
+                         class_=("post-title","post-content","post-header")
+                         )))
+    page=loader.load()
 
-    # Make a soup object to parse the HTML
-    soup = BeautifulSoup(source, 'html.parser')
-
-    # Extract the plain text content from paragraphs
-    paras = []
-    for paragraph in soup.find_all('p'):
-        paras.append(paragraph.text.strip())  # Strip removes leading/trailing whitespaces
-
-    # Extract text from divs that contain headers and other content
-    heads = []
-    for head in soup.find_all('div', attrs={'class': 'mw-parser-output'}):
-        heads.append(head.text.strip())  # Strip leading/trailing whitespaces
-
-    # Combine paragraphs and headers, but don't interleave
-    text = '\n\n'.join(paras)  # Join each paragraph with two new lines for separation
-
-    # Drop footnote superscripts in brackets using regular expressions
-    text = re.sub(r"\[.*?\]+", '', text)
-
-    return text  # Returning separated paragraphs
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    chunked_text=text_splitter.split_text(page)
 
 
 
-def preprocess_document_data(document_path):
+
+def preprocess_document_data(document_path,model):
     pdf_loader = PyPDFLoader(document_path)
-    pages = pdf_loader.load_and_split()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
-    context = "\n\n".join(str(p.page_content) for p in pages)
-    texts = text_splitter.split_text(context)
-
-
+    pages = pdf_loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    chunked_documents=text_splitter.split_documents(pages)
     def remove_emojis(string):
         emoji_pattern = re.compile(
             "["
@@ -60,17 +46,4 @@ def preprocess_document_data(document_path):
         return emoji_pattern.sub(r'', string)
 
 
-    for text in range(len(texts)):
-        texts[text] =remove_emojis(texts[text])
-
-
-    return texts
-
-
-def store_data(text,category):
-    chroma_client=chromadb.PersistentClient('vectorstore')
-    chroma_client.get_or_create_collection(name=category)
-    for i, chunk in enumerate(text_chunks):
-        metadata = {"source": source, "chunk_id": i}
-        collection.add(text=chunk, metadata=metadata)
-
+    return chunked_documents
