@@ -64,3 +64,8 @@ def generate_embedding_and_store(text, model):
 
     db=FAISS.from_documents(text,embedding_method)
     return db
+
+
+def query_from_db(query ,db):
+    retreived_result=db.similarity_search(query)
+    return  retreived_result[0].page_content
