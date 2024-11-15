@@ -12,21 +12,39 @@ from langchain_community.vectorstores import FAISS
 import faiss
 from langchain_openai import OpenAIEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from urllib.parse import urlparse, urljoin
+from langchain.schema import Document
+
 
 def scrap_url_data(url):
+    # Parse and validate URL
+    parsed_url = urlparse(url)
+    if not parsed_url.scheme:
+        url = urljoin("https://", url)  # Default to https if no scheme provided
 
     # Read the page source
-    loader=WebBaseLoader( web_paths=url,
-                         bs_kwargs=dict(parse_only=bs4.SoupStrainer(
-                         class_=("post-title","post-content","post-header")
-                         )))
-    page=loader.load()
+    loader = WebBaseLoader(
+        web_paths=(url,),
+        bs_kwargs=dict(parse_only=bs4.SoupStrainer(
+            # class_=("post-title","post-content","post-header")
+        ))
+    )
+    
+    page = loader.load()
 
+    # Check if `page` is a list and extract text
+    if isinstance(page, list):
+        page_text = " ".join([doc.page_content for doc in page if hasattr(doc, "page_content")])
+    elif isinstance(page, str):
+        page_text = page
+    else:
+        raise ValueError("Unexpected page format: expected a list or string.")
+    
+    # Split text
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunked_text=text_splitter.split_text(page)
+    chunked_text = text_splitter.split_text(page_text)
 
     return chunked_text
-
 
 
 def preprocess_document_data(document_path):
@@ -54,17 +72,11 @@ def preprocess_document_data(document_path):
 
 
 
-def generate_embedding_and_store(text, model):
-    if model=="ollama":
-        embedding_method = OllamaEmbeddings()
-    elif model=="gemini":
-        embedding_method=GoogleGenerativeAIEmbeddings()
-    elif model=="chatgpt":
-        embedding_method = OpenAIEmbeddings()
-
-    db=FAISS.from_documents(text,embedding_method)
+def generate_embedding_and_store(text, embedding_method):
+    # Wrap each string in `text` as a Document with a page_content attribute
+    documents = [Document(page_content=chunk) for chunk in text]
+    db = FAISS.from_documents(documents, embedding_method)
     return db
-
 
 def query_from_db(query ,db):
     retreived_result=db.similarity_search(query)

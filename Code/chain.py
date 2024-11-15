@@ -3,7 +3,7 @@ from langchain_community.llms import ollama,openai ,google_palm
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
 
-def prompt_template(context):
+def prompt_template():
     prompt=ChatPromptTemplate.from_template("""
        Answer the following question based on only context provided.
        Think step by step before providing detailed answer.
