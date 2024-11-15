@@ -144,12 +144,12 @@ def craete_UI(llm_models,embeddings,prompt):
     if url_analyze_button and uploaded_url and user_query:
         scrapped_data=scrap_url_data(uploaded_url)
         # st.write(scrapped_data)
-        db=generate_embedding_and_store(scrapped_data,embedding_method=embeddings["google_embeddings"])
+        db=generate_embedding_and_store(scrapped_data,embedding_method=embeddings[selected_url_model])
         llm=llm_models[selected_url_model]
         document_chain=stuff_documents_chain(llm,prompt)
         retrieval_chainn=retrieval_chain(db,document_chain)
         response=retrieval_chainn.invoke({"input":user_query})
-        st.write(response["answer"])
+        st.write(response)
 
 
 
