@@ -157,9 +157,9 @@ def craete_UI(llm_models,embeddings,prompt):
             db=generate_embedding_and_store(scrapped_data,embedding_method=embeddings[selected_url_model])
             llm=llm_models[selected_url_model]
             
-        with st.spinner("Gnerating response..."):
+        with st.spinner("Generating response..."):
             document_chain=stuff_documents_chain(llm,prompt)
-            retrieval_chainn=retrieval_chain(db,document_chain)
+            retrieval_chainn=retrieval_chain(db,document_chain,llm)
             response=retrieval_chainn.invoke({"input":user_query})
             st.write(response)
 

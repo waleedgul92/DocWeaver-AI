@@ -2,6 +2,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms import ollama,openai ,google_palm
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import FlashrankRerank
 
 def prompt_template():
     prompt=ChatPromptTemplate.from_template("""
@@ -20,7 +22,15 @@ def stuff_documents_chain(llm , prompt):
     document_chain=create_stuff_documents_chain(llm , prompt)
     return document_chain
 
-def retrieval_chain(db ,document_chain):
+def retrieval_chain(db ,document_chain,llm=None):
     retreival=db.as_retriever()
-    retrieval_chain=create_retrieval_chain(retreival,document_chain)
-    return retrieval_chain
+    if llm:
+        compressor = FlashrankRerank()
+        compression_retriever = ContextualCompressionRetriever(
+            base_compressor=compressor, base_retriever=retreival
+    )
+        retrieval_chain=create_retrieval_chain(compression_retriever,document_chain)
+        return retrieval_chain
+    else:
+        retrieval_chain=create_retrieval_chain(retreival,document_chain)
+        return retrieval_chain
