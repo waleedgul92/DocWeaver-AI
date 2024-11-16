@@ -14,6 +14,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from urllib.parse import urlparse, urljoin
 from langchain.schema import Document
+import streamlit as st
 
 
 def scrap_url_data(url):
@@ -73,7 +74,8 @@ def preprocess_document_data(document_path):
 
 
 def generate_embedding_and_store(text, embedding_method):
-    # Wrap each string in `text` as a Document with a page_content attribute
+    # Wrap each string in `text` as a Document with a page_content attribu
+
     documents = [Document(page_content=chunk) for chunk in text]
     db = FAISS.from_documents(documents, embedding_method)
     return db

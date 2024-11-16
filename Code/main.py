@@ -13,7 +13,7 @@ from chain import prompt_template ,stuff_documents_chain ,retrieval_chain
 
 def craete_UI(llm_models,embeddings,prompt):
     # Configure the Streamlit page
-    st.set_page_config("MedQuery AI", initial_sidebar_state="collapsed")
+    st.set_page_config("DocWeaver AI", initial_sidebar_state="collapsed")
 
     # Custom CSS for animations and styling
     st.markdown(
@@ -81,7 +81,7 @@ def craete_UI(llm_models,embeddings,prompt):
     )
 
     # Display the animated welcome message
-    st.markdown("<div class='welcome-message'>Welcome to MedQuery AI!</div>", unsafe_allow_html=True)
+    st.markdown("<div class='welcome-message'>Welcome to DocWeaver AI!</div>", unsafe_allow_html=True)
 
     # Custom CSS for spinner
     st.markdown("""
@@ -139,17 +139,29 @@ def craete_UI(llm_models,embeddings,prompt):
     </style>
     """, unsafe_allow_html=True)
 
+    
+    with col_model:
+        st.markdown(f"<div style='color:gray; font-size:14px text-align: right;'  > URL Model: {selected_url_model}</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+        .css-13sdm1b.e16nr0p33 {
+        margin-top: -75px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
     # Generate and display image if button is clicked
     if url_analyze_button and uploaded_url and user_query:
-        scrapped_data=scrap_url_data(uploaded_url)
-        # st.write(scrapped_data)
-        db=generate_embedding_and_store(scrapped_data,embedding_method=embeddings[selected_url_model])
-        llm=llm_models[selected_url_model]
-        document_chain=stuff_documents_chain(llm,prompt)
-        retrieval_chainn=retrieval_chain(db,document_chain)
-        response=retrieval_chainn.invoke({"input":user_query})
-        st.write(response)
+        with st.spinner("Fetching data from URL..."):
+            scrapped_data=scrap_url_data(uploaded_url)
+            db=generate_embedding_and_store(scrapped_data,embedding_method=embeddings[selected_url_model])
+            llm=llm_models[selected_url_model]
+            
+        with st.spinner("Gnerating response..."):
+            document_chain=stuff_documents_chain(llm,prompt)
+            retrieval_chainn=retrieval_chain(db,document_chain)
+            response=retrieval_chainn.invoke({"input":user_query})
+            st.write(response)
 
 
 
