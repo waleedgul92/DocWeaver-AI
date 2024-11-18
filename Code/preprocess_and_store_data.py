@@ -50,28 +50,27 @@ def scrap_url_data(url):
 
 def preprocess_document_data(document_path):
     pdf_loader = PyPDFLoader(document_path)
-    pages = pdf_loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunked_documents=text_splitter.split_documents(pages)
-    def remove_emojis(string):
-        emoji_pattern = re.compile(
-            "["
-            u"\U0001F600-\U0001F64F" # emoticons
-            u"\U0001F300-\U0001F5FF" # symbols & pictographs
-            u"\U0001F680-\U0001F6FF" # transport & map symbols
-            u"\U0001F1E0-\U0001F1FF" # flags (iOS)
-            u"\U00002702-\U000027B0"
-            u"\U000024C2-\U0001F251"
-            "]+", 
-            flags=re.UNICODE
-        )
-        
-        return emoji_pattern.sub(r'', string)
+    pages = pdf_loader.load_and_split()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
+    context = "\n\n".join(str(p.page_content) for p in pages)
+    
 
+    texts = text_splitter.split_text(context)
 
-    return chunked_documents
-
-
+    emoji_pattern = re.compile(
+        "["
+        u"\U0001F600-\U0001F64F" # emoticons
+        u"\U0001F300-\U0001F5FF" # symbols & pictographs
+        u"\U0001F680-\U0001F6FF" # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF" # flags (iOS)
+        u"\U00002702-\U000027B0"
+        u"\U000024C2-\U0001F251"
+        "]+", 
+        flags=re.UNICODE
+    )
+    for i in range(len(texts)):
+        texts[i] = emoji_pattern.sub(r'', texts[i])
+    return texts
 
 def generate_embedding_and_store(text, embedding_method):
     # Wrap each string in `text` as a Document with a page_content attribu

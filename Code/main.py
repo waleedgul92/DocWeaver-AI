@@ -161,14 +161,20 @@ def craete_UI(llm_models,embeddings,prompt):
             response=retrieval_chainn.invoke({"input":user_query})
             st.write(response)
     if pdf_analyze_button  and uploaded_pdf and user_query:
-            temp_file = os.path.join('/tmp', uploaded_pdf.name)
-            with open(temp_file, 'wb') as f:
-                f.write(uploaded_pdf.getvalue())
-                file_name = uploaded_pdf.name
-                pdf_loader = preprocess_document_data(temp_file)
-                db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
-                st.write(db)
-
+            with st.spinner("Analyzing you pdf..."):
+                temp_file = os.path.join('/tmp', uploaded_pdf.name)
+                with open(temp_file, 'wb') as f:
+                    f.write(uploaded_pdf.getvalue())
+                    file_name = uploaded_pdf.name
+                    pdf_loader = preprocess_document_data(temp_file)
+                    db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
+                    llm=llm_models[selected_url_model]
+                
+            with st.spinner("Generating response..."):
+                document_chain=stuff_documents_chain(llm,prompt)
+                retrieval_chainn=retrieval_chain(db,document_chain,llm)
+                response=retrieval_chainn.invoke({"input":user_query})
+                st.write(response)
 
 if __name__ == "__main__":
     llm_models=get_models()
