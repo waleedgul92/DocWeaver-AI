@@ -1,9 +1,10 @@
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.llms import ollama,openai ,google_palm
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import FlashrankRerank
+from langchain.load import dumps, loads
+from langchain_core.output_parsers import StrOutputParser
 
 def prompt_template():
     prompt=ChatPromptTemplate.from_template("""
@@ -22,15 +23,20 @@ def stuff_documents_chain(llm , prompt):
     document_chain=create_stuff_documents_chain(llm , prompt)
     return document_chain
 
-def retrieval_chain(db ,document_chain,llm=None):
+def retrieval_chain(db ,document_chain):
     retreival=db.as_retriever()
-    if llm:
-        compressor = FlashrankRerank()
-        compression_retriever = ContextualCompressionRetriever(
-            base_compressor=compressor, base_retriever=retreival
-    )
-        retrieval_chain=create_retrieval_chain(compression_retriever,document_chain)
-        return retrieval_chain
-    else:
-        retrieval_chain=create_retrieval_chain(retreival,document_chain)
-        return retrieval_chain
+    retrieval_chain=create_retrieval_chain(retreival,document_chain)
+    return retrieval_chain
+
+
+
+
+
+def get_queries():
+    
+# RAG-Fusion
+    template = """You are a helpful assistant that generates multiple search queries based on a single input query. \n
+    Generate multiple search queries related to: {question} \n
+    Output (4 queries):"""
+    prompt_rag_fusion = ChatPromptTemplate.from_template(template)
+    return prompt_rag_fusion

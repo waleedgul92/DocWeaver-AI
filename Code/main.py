@@ -5,11 +5,11 @@ import os
 from preprocess_and_store_data import scrap_url_data , preprocess_document_data
 from preprocess_and_store_data import generate_embedding_and_store , query_from_db
 from get_models import get_models , get_embeddings
-from chain import prompt_template ,stuff_documents_chain ,retrieval_chain
+from chain import prompt_template ,stuff_documents_chain ,retrieval_chain ,get_queries
 from langchain.document_loaders import PyPDFLoader
 
 
-def craete_UI(llm_models,embeddings,prompt):
+def craete_UI(llm_models,embeddings,prompt,generate_queries_prompt):
     # Configure the Streamlit page
     st.set_page_config("DocWeaver AI", initial_sidebar_state="collapsed")
 
@@ -157,7 +157,7 @@ def craete_UI(llm_models,embeddings,prompt):
             
         with st.spinner("Generating response..."):
             document_chain=stuff_documents_chain(llm,prompt)
-            retrieval_chainn=retrieval_chain(db,document_chain,llm)
+            retrieval_chainn=retrieval_chain(db,document_chain)
             response=retrieval_chainn.invoke({"input":user_query})
             st.write(response["answer"])
 
@@ -173,12 +173,14 @@ def craete_UI(llm_models,embeddings,prompt):
                 
             with st.spinner("Generating response..."):
                 document_chain=stuff_documents_chain(llm,prompt)
-                retrieval_chainn=retrieval_chain(db,document_chain,llm)
+                retrieval_chainn=retrieval_chain(db,document_chain)
                 response=retrieval_chainn.invoke({"input":user_query})
                 st.write(response["answer"])
+
 
 if __name__ == "__main__":
     llm_models=get_models()
     embeddings=get_embeddings()
     prompt=prompt_template()
-    craete_UI(llm_models,embeddings,prompt)
+    generate_queries_prompt=get_queries()
+    craete_UI(llm_models,embeddings,prompt,generate_queries_prompt)

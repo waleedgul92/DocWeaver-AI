@@ -4,8 +4,6 @@ import re
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
-import langchain.vectorstores as vectorstore
-import chromadb
 import bs4
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores import FAISS  
@@ -14,8 +12,6 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from urllib.parse import urlparse, urljoin
 from langchain.schema import Document
-import streamlit as st
-
 
 def scrap_url_data(url):
     # Parse and validate URL
@@ -82,3 +78,5 @@ def generate_embedding_and_store(text, embedding_method):
 def query_from_db(query ,db):
     retreived_result=db.similarity_search(query)
     return  retreived_result[0].page_content
+
+
