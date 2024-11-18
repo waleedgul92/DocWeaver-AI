@@ -159,7 +159,8 @@ def craete_UI(llm_models,embeddings,prompt):
             document_chain=stuff_documents_chain(llm,prompt)
             retrieval_chainn=retrieval_chain(db,document_chain,llm)
             response=retrieval_chainn.invoke({"input":user_query})
-            st.write(response)
+            st.write(response["answer"])
+
     if pdf_analyze_button  and uploaded_pdf and user_query:
             with st.spinner("Analyzing you pdf..."):
                 temp_file = os.path.join('/tmp', uploaded_pdf.name)
@@ -174,7 +175,7 @@ def craete_UI(llm_models,embeddings,prompt):
                 document_chain=stuff_documents_chain(llm,prompt)
                 retrieval_chainn=retrieval_chain(db,document_chain,llm)
                 response=retrieval_chainn.invoke({"input":user_query})
-                st.write(response)
+                st.write(response["answer"])
 
 if __name__ == "__main__":
     llm_models=get_models()
