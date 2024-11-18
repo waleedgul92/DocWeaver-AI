@@ -1,14 +1,12 @@
 import streamlit as st
 from PIL import Image
 from dotenv import load_dotenv
-import tempfile
 import os
-import io
-import PIL 
-from preprocess_and_store_data import scrap_url_data
+from preprocess_and_store_data import scrap_url_data , preprocess_document_data
 from preprocess_and_store_data import generate_embedding_and_store , query_from_db
 from get_models import get_models , get_embeddings
 from chain import prompt_template ,stuff_documents_chain ,retrieval_chain
+from langchain.document_loaders import PyPDFLoader
 
 
 def craete_UI(llm_models,embeddings,prompt):
@@ -120,7 +118,7 @@ def craete_UI(llm_models,embeddings,prompt):
     selected_pdf_model = st.sidebar.selectbox("Select a Document Analysis", ["Gemini-1.5", "Ollama"], label_visibility="hidden")
 
     st.sidebar.title("Model for URL Analysis")
-    selected_url_model = st.sidebar.selectbox("Select a URL Analysis", ["Gemini-1.5", "Ollama","Gpt"], label_visibility="hidden")
+    selected_url_model = st.sidebar.selectbox("Select a URL Analysis", ["Gemini-1.5", "Ollama"], label_visibility="hidden")
 
     st.sidebar.title("Upload a PDF")
     uploaded_pdf = st.sidebar.file_uploader("Upload an PDF File", type=["pdf"],
@@ -162,7 +160,14 @@ def craete_UI(llm_models,embeddings,prompt):
             retrieval_chainn=retrieval_chain(db,document_chain,llm)
             response=retrieval_chainn.invoke({"input":user_query})
             st.write(response)
-
+    if pdf_analyze_button  and uploaded_pdf and user_query:
+            temp_file = os.path.join('/tmp', uploaded_pdf.name)
+            with open(temp_file, 'wb') as f:
+                f.write(uploaded_pdf.getvalue())
+                file_name = uploaded_pdf.name
+                pdf_loader = preprocess_document_data(temp_file)
+                db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
+                st.write(db)
 
 
 if __name__ == "__main__":
