@@ -5,11 +5,12 @@ import os
 from preprocess_and_store_data import scrap_url_data , preprocess_document_data
 from preprocess_and_store_data import generate_embedding_and_store , query_from_db
 from get_models import get_models , get_embeddings
-from chain import prompt_template ,stuff_documents_chain ,retrieval_chain ,get_queries
+from chain import prompt_template ,get_queries_template ,generate_queries
+from chain import retrieval_chain_rag_fusion , reciprocal_rank_fusion, final_rag
 from langchain.document_loaders import PyPDFLoader
 
 
-def craete_UI(llm_models,embeddings,prompt,generate_queries_prompt):
+def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
     # Configure the Streamlit page
     st.set_page_config("DocWeaver AI", initial_sidebar_state="collapsed")
 
@@ -156,31 +157,32 @@ def craete_UI(llm_models,embeddings,prompt,generate_queries_prompt):
             llm=llm_models[selected_url_model]
             
         with st.spinner("Generating response..."):
-            document_chain=stuff_documents_chain(llm,prompt)
-            retrieval_chainn=retrieval_chain(db,document_chain)
-            response=retrieval_chainn.invoke({"input":user_query})
-            st.write(response["answer"])
+                retriever=db.as_retriever()
+                generated_queries = generate_queries(llm, prompt_rag_fusion, user_query)
+                retrieved_docs = retrieval_chain_rag_fusion(generated_queries, retriever, user_query)
+                answer = final_rag(retrieved_docs, final_prompt, llm, user_query)
+                st.write(answer)
 
     if pdf_analyze_button  and uploaded_pdf and user_query:
             with st.spinner("Analyzing you pdf..."):
                 temp_file = os.path.join('/tmp', uploaded_pdf.name)
                 with open(temp_file, 'wb') as f:
                     f.write(uploaded_pdf.getvalue())
-                    file_name = uploaded_pdf.name
                     pdf_loader = preprocess_document_data(temp_file)
                     db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
                     llm=llm_models[selected_url_model]
                 
             with st.spinner("Generating response..."):
-                document_chain=stuff_documents_chain(llm,prompt)
-                retrieval_chainn=retrieval_chain(db,document_chain)
-                response=retrieval_chainn.invoke({"input":user_query})
-                st.write(response["answer"])
-
+                
+                retriever=db.as_retriever()
+                generated_queries = generate_queries(llm, prompt_rag_fusion, user_query)
+                retrieved_docs = retrieval_chain_rag_fusion(generated_queries, retriever, user_query)
+                answer = final_rag(retrieved_docs, final_prompt, llm, user_query)
+                st.write(answer)
 
 if __name__ == "__main__":
     llm_models=get_models()
     embeddings=get_embeddings()
-    prompt=prompt_template()
-    generate_queries_prompt=get_queries()
-    craete_UI(llm_models,embeddings,prompt,generate_queries_prompt)
+    prompt_rag_fusion=get_queries_template()
+    final_prompt=prompt_template()
+    craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion)
