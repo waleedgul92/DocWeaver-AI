@@ -14,5 +14,6 @@
 1. install requirements using txt file in repository on python version 3.10
 2. Get Gemini key from store it with name "Gemini_key" in keys.env
 3. Download LLama llama3.2:1b from website "https://ollama.com"
+4.  Run following command ,  streamlit run code/main.py --server.enableXsrfProtection false
 
 ## Video Demo
