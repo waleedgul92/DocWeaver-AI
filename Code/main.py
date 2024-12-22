@@ -155,6 +155,7 @@ def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
             scrapped_data=scrap_url_data(uploaded_url)
             db=generate_embedding_and_store(scrapped_data,embedding_method=embeddings[selected_url_model])
             llm=llm_models[selected_url_model]
+            st.success("Fetching data from url Successfully")
             
         with st.spinner("Generating response..."):
                 retriever=db.as_retriever()
@@ -171,6 +172,7 @@ def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
                     pdf_loader = preprocess_document_data(temp_file)
                     db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
                     llm=llm_models[selected_url_model]
+                    st.success("Fetching data from document Successfully")
                 
             with st.spinner("Generating response..."):
                 
