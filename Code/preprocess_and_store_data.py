@@ -4,14 +4,11 @@ import re
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
-import bs4
-from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores import FAISS  
 import faiss
-from langchain_openai import OpenAIEmbeddings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from urllib.parse import urlparse, urljoin
 from langchain.schema import Document
+import bs4
 
 def scrap_url_data(url):
     # Parse and validate URL
