@@ -12,8 +12,9 @@
 6. Answer original query using those reranked documents
 ## What you need to run code
 1. install requirements using txt file in repository on python version 3.10
-2. Get Gemini key from store it with name "Gemini_key" in keys.env
-3. Download LLama llama3.2:1b from website "https://ollama.com"
-4.  Run following command ,  streamlit run code/main.py --server.enableXsrfProtection false
+2. Get Gemini key and store it with name "Gemini_key" in keys.env
+3. Get Groq key and save it with name "GROQ_API_KEY" in keys.env
+4. Download LLama llama3.2:1b from website "https://ollama.com"
+5.  Run following command ,  streamlit run code/main.py --server.enableXsrfProtection false
 
 ## Video Demo
