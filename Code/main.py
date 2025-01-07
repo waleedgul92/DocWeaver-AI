@@ -8,7 +8,7 @@ from get_models import get_models , get_embeddings
 from chain import prompt_template ,get_queries_template ,generate_queries
 from chain import retrieval_chain_rag_fusion , reciprocal_rank_fusion, final_rag
 from langchain.document_loaders import PyPDFLoader
-
+import time
 
 def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
     # Configure the Streamlit page
@@ -155,6 +155,9 @@ def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
             scrapped_data=scrap_url_data(uploaded_url)
             db=generate_embedding_and_store(scrapped_data,embedding_method=embeddings[selected_url_model])
             llm=llm_models[selected_url_model]
+            sucess=st.success("Fetching data from url Successfully")
+        time.sleep(1)
+        sucess.empty()  
             
         with st.spinner("Generating response..."):
                 retriever=db.as_retriever()
@@ -164,13 +167,16 @@ def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
                 st.write(answer)
 
     if pdf_analyze_button  and uploaded_pdf and user_query:
-            with st.spinner("Analyzing you pdf..."):
+            with st.spinner("Analyzing your pdf..."):
                 temp_file = os.path.join('/tmp', uploaded_pdf.name)
                 with open(temp_file, 'wb') as f:
                     f.write(uploaded_pdf.getvalue())
                     pdf_loader = preprocess_document_data(temp_file)
                     db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
                     llm=llm_models[selected_url_model]
+                    sucess=st.success("Fetching data from document Successfully")
+                    time.sleep(1)
+                    sucess.empty()
                 
             with st.spinner("Generating response..."):
                 
