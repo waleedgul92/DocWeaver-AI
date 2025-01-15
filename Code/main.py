@@ -123,7 +123,7 @@ def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
 
     st.sidebar.title("Upload a PDF")
     uploaded_pdf = st.sidebar.file_uploader("Upload an PDF File", type=["pdf"],
-                                                    help="Upload an image for analysis ", label_visibility="hidden")
+                                                    help="Upload an image for analysis ", label_visibility="hidden",accept_multiple_files=True)
 
     st.sidebar.title("Add a URL")
     uploaded_url=st.sidebar.text_input("Enter the URL", help="Enter the URL for analysis", label_visibility="hidden")
@@ -167,16 +167,19 @@ def craete_UI(llm_models,embeddings,final_prompt,prompt_rag_fusion):
                 st.write(answer)
 
     if pdf_analyze_button  and uploaded_pdf and user_query:
-            with st.spinner("Analyzing your pdf..."):
-                temp_file = os.path.join('/tmp', uploaded_pdf.name)
-                with open(temp_file, 'wb') as f:
-                    f.write(uploaded_pdf.getvalue())
-                    pdf_loader = preprocess_document_data(temp_file)
-                    db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
-                    llm=llm_models[selected_url_model]
-                    sucess=st.success("Fetching data from document Successfully")
-                    time.sleep(1)
-                    sucess.empty()
+            with st.spinner("Analyzing your pdf(s).."):
+                print(uploaded_pdf)
+                for pdf_file in uploaded_pdf:
+                    temp_file = os.path.join('/tmp', pdf_file.name)
+                
+                    with open(temp_file, 'wb') as f:
+                        f.write(pdf_file.getvalue())
+                        pdf_loader = preprocess_document_data(temp_file)
+                        db=generate_embedding_and_store(pdf_loader,embedding_method=embeddings[selected_pdf_model])
+                        llm=llm_models[selected_url_model]
+                sucess=st.success("Fetching data from document(s) Successfully")
+                time.sleep(1)
+                sucess.empty()
                 
             with st.spinner("Generating response..."):
                 
